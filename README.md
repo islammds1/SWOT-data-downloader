@@ -21,12 +21,7 @@ Double-click the .py file, or run from Anaconda Prompt:
 ```bash
 python swot_downloader.py
 python swot_earthaccess_downloader.py
-```ount to access the data: https://www.aviso.altimetry.fr
-```
 
 ---
 
-## Step 5 — Share the Link
-Your repository will be live at:
-```
-https://github.com/islammds1/SWOT-data-downloader
+
