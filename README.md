@@ -1,26 +1,26 @@
 
-# SWOT Data Downloader
 
-A simple GUI tool to download SWOT satellite altimetry data from the AVISO+ FTP server.
+# SWOT Data Downloader Tools
 
-## Features
-- Easy login with your AVISO credentials
-- Select product level, version (PID0, PGD0…), and type (Expert, Basic…)
-- Set cycle range and pass IDs
-- Live download log
+Two GUI tools for downloading SWOT satellite data:
 
-## Requirements
-- Python 3.7+
-- No extra libraries needed (uses built-in tkinter and ftplib)
+## 1. AVISO+ FTP Downloader (`swot_LR_downloader.py`)
+- Downloads from the AVISO+ FTP server
+- Requires AVISO+ account: https://www.aviso.altimetry.fr
+- No extra libraries needed
+
+## 2. NASA Earthdata Downloader (`swot_earthaccess_downloader.py`)
+- Downloads from NASA Earthdata (CMR)
+- Supports LR SSH, HR PIXC, HR Raster, HR RiverSP
+- Requires NASA Earthdata account: https://urs.earthdata.nasa.gov
+- Requires: pip install earthaccess
 
 ## How to Run
-Download `swot_downloader.py` and double-click it, or run:
+Double-click the .py file, or run from Anaconda Prompt:
 ```bash
 python swot_downloader.py
-```
-
-## AVISO Account
-You need a free AVISO+ account to access the data: https://www.aviso.altimetry.fr
+python swot_earthaccess_downloader.py
+```ount to access the data: https://www.aviso.altimetry.fr
 ```
 
 ---
