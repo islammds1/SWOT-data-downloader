@@ -9,7 +9,7 @@ Two GUI tools for downloading SWOT satellite data:
 - Requires AVISO+ account: https://www.aviso.altimetry.fr
 - No extra libraries needed
 
-## 2. NASA Earthdata Downloader (`swot_earthaccess_downloader.py`)
+## 2. NASA Earthdata Downloader (`SWOT_LR_HR_Downloader_Earthdata.py`)
 - Downloads from NASA Earthdata (CMR)
 - Supports LR SSH, HR PIXC, HR Raster, HR RiverSP
 - Requires NASA Earthdata account: https://urs.earthdata.nasa.gov
