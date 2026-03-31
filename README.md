@@ -8,10 +8,11 @@ Two GUI tools for downloading SWOT satellite data:
 - Downloads from the AVISO+ FTP server
 - Requires AVISO+ account: https://www.aviso.altimetry.fr
 - No extra libraries needed
+- works for Level-2 and Level-3 LR data 
 
 ## 2. NASA Earthdata Downloader (`SWOT_LR_HR_Downloader_Earthdata.py`)
 - Downloads from NASA Earthdata (CMR)
-- Supports LR SSH, HR PIXC, HR Raster, HR RiverSP
+- Supports LR SSH, HR PIXC, HR Raster, HR RiverSP (Version D only)
 - Requires NASA Earthdata account: https://urs.earthdata.nasa.gov
 - Requires: pip install earthaccess
 
