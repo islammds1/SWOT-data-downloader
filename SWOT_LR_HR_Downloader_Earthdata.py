@@ -198,8 +198,24 @@ class EarthAccessApp(tk.Tk):
                                  ['Expert', 'Basic', 'Unsmoothed', 'WindWave'])
 
         # ── Shared: cycle + pass ──────────────────────────────────────────────
-        lbl(c_pattern, 'Cycle Number  (3 digits, e.g.  048)  — use * for all')
-        self.e_cycle = entry(c_pattern, default='*')
+        lbl(c_pattern, 'Cycle Range  (start → end)  — leave end blank for single cycle')
+        cyc_row = tk.Frame(c_pattern, bg=CARD)
+        cyc_row.pack(fill='x')
+        self.e_cycle_start = tk.Entry(cyc_row, font=FONT_ENTRY, bg=ENTRY_BG, fg=TEXT,
+                                      insertbackground=ACCENT, relief='flat', bd=0,
+                                      highlightthickness=1, highlightcolor=ACCENT,
+                                      highlightbackground=MUTED, width=8)
+        self.e_cycle_start.insert(0, '*')
+        self.e_cycle_start.pack(side='left', ipady=4)
+        tk.Label(cyc_row, text='  →  ', font=FONT_LABEL,
+                 bg=CARD, fg=MUTED).pack(side='left')
+        self.e_cycle_end = tk.Entry(cyc_row, font=FONT_ENTRY, bg=ENTRY_BG, fg=TEXT,
+                                    insertbackground=ACCENT, relief='flat', bd=0,
+                                    highlightthickness=1, highlightcolor=ACCENT,
+                                    highlightbackground=MUTED, width=8)
+        self.e_cycle_end.insert(0, '')
+        self.e_cycle_end.pack(side='left', ipady=4)
+        hint(c_pattern, 'ℹ  e.g. start=032 end=042 downloads cycles 032 to 042. Use * in start for all cycles.')
 
         lbl(c_pattern, 'Pass Number  (3 digits, e.g.  001)  — use * for all')
         self.e_pass_id = entry(c_pattern, default='*')
@@ -285,8 +301,8 @@ class EarthAccessApp(tk.Tk):
         for w in (self.cb_shortname, self.cb_level, self.cb_raster_res,
                   self.cb_river_type, self.cb_side):
             w.bind('<<ComboboxSelected>>', lambda e: self._update_preview())
-        for w in (self.e_cycle, self.e_pass_id, self.e_tile, self.e_version,
-                  self.e_raster_proj, self.e_raster_tile, self.e_continent):
+        for w in (self.e_cycle_start, self.e_cycle_end, self.e_pass_id, self.e_tile,
+                  self.e_version, self.e_raster_proj, self.e_raster_tile, self.e_continent):
             w.bind('<KeyRelease>', lambda e: self._update_preview())
 
         # Initial state
@@ -345,44 +361,51 @@ class EarthAccessApp(tk.Tk):
 
     # ── Pattern builder ───────────────────────────────────────────────────────
 
-    def _build_pattern(self):
+    def _get_cycles(self):
+        start = self.e_cycle_start.get().strip()
+        end   = self.e_cycle_end.get().strip()
+        if start == '*' or start == '':
+            return ['*']
+        if end == '' or not end.isdigit() or not start.isdigit():
+            return [start.zfill(3)]
+        return [str(i).zfill(3) for i in range(int(start), int(end) + 1)]
+
+    def _make_pattern(self, cycle):
         ptype   = self.cb_type.get()
-        cycle   = self.e_cycle.get().strip() or '*'
         pass_id = self.e_pass_id.get().strip() or '*'
         version = self.e_version.get().strip() or '*'
 
         if ptype == 'LR_SSH':
-            # SWOT_L2_LR_SSH_Expert_510_016_*_*_PGD0_01
             level = self.cb_level.get()
             return f'SWOT_L2_LR_SSH_{level}_{cycle}_{pass_id}_*_*_{version}'
-
         elif ptype == 'HR_PIXC':
-            # SWOT_L2_HR_PIXC_048_001_281L_*_*_PID0_01
             tile = self.e_tile.get().strip() or '*'
             side = self.cb_side.get().strip()
             tile_field = f'{tile}{side}' if side != '*' else f'{tile}*'
             return f'SWOT_L2_HR_PIXC_{cycle}_{pass_id}_{tile_field}_*_*_{version}'
-
         elif ptype == 'HR_Raster':
-            # SWOT_L2_HR_Raster_100m_UTM41R_N_x_x_x_047_566_056F_*_*_PID0_01
-            res   = self.cb_raster_res.get()
-            proj  = self.e_raster_proj.get().strip() or '*'
-            tile  = self.e_raster_tile.get().strip() or '*'
+            res  = self.cb_raster_res.get()
+            proj = self.e_raster_proj.get().strip() or '*'
+            tile = self.e_raster_tile.get().strip() or '*'
             return f'SWOT_L2_HR_Raster_{res}_{proj}_N_x_x_x_{cycle}_{pass_id}_{tile}_*_*_{version}'
-
         elif ptype == 'HR_RiverSP':
-            # SWOT_L2_HR_RiverSP_Reach_048_001_EU_*_*_PID0_01
             rtype     = self.cb_river_type.get()
             continent = self.e_continent.get().strip() or '*'
             return f'SWOT_L2_HR_RiverSP_{rtype}_{cycle}_{pass_id}_{continent}_*_*_{version}'
-
         return 'SWOT_L2_*'
 
     def _update_preview(self):
-        self.lbl_pattern.config(text=self._build_pattern())
+        cycles = self._get_cycles()
+        if len(cycles) == 1:
+            preview = self._make_pattern(cycles[0])
+        else:
+            first = self._make_pattern(cycles[0])
+            last  = self._make_pattern(cycles[-1])
+            preview = f'{first}\n  ... ({len(cycles)} cycles total) ...\n{last}'
+        self.lbl_pattern.config(text=preview)
 
-    def _get_pattern(self):
-        return self._build_pattern()
+    def _get_patterns(self):
+        return [(c, self._make_pattern(c)) for c in self._get_cycles()]
 
     # ── Misc ──────────────────────────────────────────────────────────────────
 
@@ -422,24 +445,27 @@ class EarthAccessApp(tk.Tk):
                                  'Please select a local output directory.')
             return
 
-        short_name      = self.cb_shortname.get()
-        granule_pattern = self._get_pattern()
+        short_name = self.cb_shortname.get()
+        patterns   = self._get_patterns()
 
-        self._log(f'Short name:      {short_name}')
-        self._log(f'Granule pattern: {granule_pattern}\n')
+        self._log(f'Short name: {short_name}')
+        self._log(f'Cycles:     {len(patterns)} cycle(s) to process\n')
 
         self._set_busy(True)
         threading.Thread(
             target=self._download_thread,
-            args=(username, password, short_name, granule_pattern, local_dir),
+            args=(username, password, short_name, patterns, local_dir),
             daemon=True
         ).start()
 
     def _download_thread(self, username, password, short_name,
-                         granule_pattern, local_dir):
+                         patterns, local_dir):
         try:
-            run_download(username, password, short_name,
-                         granule_pattern, local_dir, self._log)
+            for i, (cycle, pattern) in enumerate(patterns, 1):
+                self._log(f'── Cycle {cycle}  ({i}/{len(patterns)})')
+                run_download(username, password, short_name,
+                             pattern, local_dir, self._log)
+            self._log(f'\n✔ All {len(patterns)} cycle(s) complete.')
         except Exception as e:
             self._log(f'\n✘ Error: {e}')
         finally:
